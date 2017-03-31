@@ -510,9 +510,11 @@ inspired styles to your `iron-data-table`.
       },
       
       _onInitialItemsChanged: function(newValue, oldValue){
-        if(oldValue && !oldValue.length){
-          this.clearCache();
-        }
+        this.async(function(){
+          if(oldValue && !oldValue.length){
+            this.clearCache();
+          }
+        }, 0);
       },
 
       _stopPropagation: function(e) {
