@@ -916,6 +916,11 @@ inspired styles to your `iron-data-table`.
         // using `push` and `pop` with large changes (more than 1000 items) is a heavy operation
         // that jams things up.
         if (this._cachedItems && Math.abs(this._cachedItems.length - size) < this.pageSize * 2) {
+          if(this._cachedItems.length === size){
+            this.push('_cachedItems', {});
+            this.pop('_cachedItems');
+          }
+           
           while (this._cachedItems.length < size) {
             this.push('_cachedItems', {});
           }
