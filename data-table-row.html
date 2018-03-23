@@ -6,7 +6,8 @@
         flex-direction: column;
         opacity: 1;
         cursor: pointer;
-
+        --row-highlight-bg-color: 0, 188, 212;
+        --highlight-bg-opacity: 0.1;
         @apply(--iron-data-table-row);
       }
 
@@ -22,6 +23,10 @@
         @apply(--iron-data-table-row-odd);
       }
 
+      :host([highlighted]){
+        background-color: rgba(var(--row-highlight-bg-color), var(--highlight-bg-opacity));
+      }
+      
       :host(:focus) {
         outline: none;
         @apply(--iron-data-table-row-focused);
@@ -70,7 +75,12 @@
           reflectToAttribute: true
         },
 
-
+        highlighted: {
+          type: Boolean,
+          reflectToAttribute: true,
+          value: false
+        },
+        
         _static: {
           type: Object,
           value: { id: 0 }

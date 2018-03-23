@@ -195,6 +195,7 @@ inspired styles to your `iron-data-table`.
                             index="[[index]]"
                             item="[[item]]"
                             tabindex="-1"
+                            highlighted="[[_isHighLighted(index,_highlightIndex)]]"
                             selected="[[_isSelected(item, selectedItems, selectedItems.*)]]">
               <data-table-checkbox hidden$="[[!multiSelection]]" tabindex="0" checked="[[_isSelected(item, selectedItems, selectedItems.*)]]" on-tap="_onCheckBoxTap"></data-table-checkbox>
               <template is="dom-repeat" items="[[columns]]" as="column" index-as="colIndex">
@@ -422,6 +423,19 @@ inspired styles to your `iron-data-table`.
           notify: true
         },
 
+        highlightedItem: {
+          type: Object,
+        },
+        
+        highlightEnabled: {
+          type: Boolean,
+          value: false
+        },
+        
+        _highlightIndex: {
+          type: Number
+        },
+        
         _pagesLoading: {
           type: Array,
           value: function() {
@@ -476,7 +490,10 @@ inspired styles to your `iron-data-table`.
       observers: ['_itemsChanged(items.*)',
         '_currentPageChanged(dataSource, _currentPage)',
         '_resetData(dataSource, filter.*, sortOrder.*)',
-        '_clearSelection(filter.*, sortOrder.*)'
+        '_clearSelection(filter.*, sortOrder.*)',
+        '_manageHighLightedItem(_highlightIndex)',
+        '_manageHighLightIndex(highLightEnabled)',
+        '_manageHighLightIndex(items,items.*)'
       ],
 
       created: function() {
@@ -1127,6 +1144,135 @@ inspired styles to your `iron-data-table`.
         }
       },
 
+      _isHighLighted: function(index, _highlightIndex){
+        if(!this.highlightEnabled){
+          return false;
+        }
+        
+        return index === _highlightIndex;
+      },
+      
+      highlightNext: function(){
+        var highlightIndex = this._highlightIndex;
+        
+        if(!this.highlightEnabled || !this.items || !this.items.length){
+          return;
+        }
+        
+        if(highlightIndex < this.items.length-1){
+          highlightIndex += 1;
+          this.set('_highlightIndex', highlightIndex);
+          this._focusHighlightedRow();
+        }
+      },
+      
+      highlightPrevious: function(){
+        var highlightIndex = this._highlightIndex;
+        
+        if(!this.highlightEnabled || !this.items || !this.items.length){
+          return;
+        }
+        
+        if(highlightIndex > 0){
+          highlightIndex -= 1;
+          this.set('_highlightIndex', highlightIndex);
+          this._focusHighlightedRow();
+        }
+      },
+      
+      _manageHighLightIndex: function(){
+        this.cancelDebouncer('manageHighLightIndex');
+        this.debounce('manageHighLightIndex', function(){
+          var self = this;
+          var previousHighLightedItem, currentHighLightedItem, highLightIndex;
+          
+          if(!self.highlightEnabled || !self.items || !self.items.length){
+            self.set('_highlightIndex', -1);
+            return;
+          }
+          
+          if(self._highlightIndex === null || self._highlightIndex === undefined || self._highlightIndex === -1){
+            self.set('_highlightIndex', 0);
+            return;
+          }
+          
+          if(self._highlightIndex > self.items.length-1){
+            self.set('_highlightIndex', 0);
+            this._focusHighlightedRow();
+            return;
+          }
+          
+          
+          previousHighLightedItem = self.items.find(function(item){
+            if(self.highLightedItem && self.highLightedItem._id){
+              return self.highLightedItem._id === item._id;
+            }
+          });
+          
+          if(!previousHighLightedItem){
+            self.set('_highlightIndex', 0);
+            this._focusHighlightedRow();
+            return;
+          }
+          
+          currentHighLightedItem = self.items[self._highlightIndex];
+          
+          if(currentHighLightedItem._id === previousHighLightedItem._id){
+            self.set('_highlightIndex', self._highlightIndex);
+            this._focusHighlightedRow();
+            return;
+          }
+          
+          highLightIndex = self.items.findIndex(function(item){
+            return item._id === previousHighLightedItem._id;
+          });
+          
+          self.set('_highlightIndex', highLightIndex);
+          this._focusHighlightedRow();
+        }, 20);
+      },
+      
+      _manageHighLightedItem: function(_highlightIndex){
+        var higlightedItem;
+        var items = this.items;
+        
+        if(!items || !items.length || _highlightIndex === null || _highlightIndex === undefined
+                || _highlightIndex === -1){
+          this.set('highLightedItem', null);
+          return;
+        }
+        
+        this.set('highLightedItem', items[_highlightIndex]);
+      },
+      
+      _focusHighlightedRow: function(){
+        var ironList, ironListOffset;
+        var highlightedRow, highlightedRowOffset;
+        var highlightIndex = this._highlightIndex;
+        
+        if(highlightIndex === null || highlightIndex === undefined || highlightIndex === -1){
+          return;
+        }
+        
+        ironList = this.$$('iron-list');
+        highlightedRow = this.querySelector("data-table-row[highlighted]");
+        
+        if(!ironList || !highlightedRow){
+          return;
+        }
+        
+        ironListOffset = ironList.getBoundingClientRect();
+        highlightedRowOffset = highlightedRow.getBoundingClientRect();
+        
+        if((highlightedRowOffset.top + highlightedRowOffset.height) > (ironListOffset.top + ironListOffset.height)){
+          ironList.scrollToIndex(highlightIndex);
+        }
+        
+        if(highlightedRowOffset.top < ironListOffset.top){
+          ironList.scrollToIndex(highlightIndex);
+        }
+      },
+      
       _onCheckBoxTap: function(e) {
         if (this._isSelected(e.model.item, this.selectedItems)) {
           this._fireEvent('deselecting-item', e.model.item, this.deselectItem);
