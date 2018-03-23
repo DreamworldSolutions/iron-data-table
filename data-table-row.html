@@ -23,8 +23,8 @@
         @apply(--iron-data-table-row-odd);
       }
 
-      :host([highlighted]){
-        background-color: rgba(var(--row-highlight-bg-color), var(--highlight-bg-opacity));
+      :host([highlighted]), :host([highlighted]) div.cells{
+        background-color: rgba(var(--row-highlight-bg-color), var(--highlight-bg-opacity)) !important;
       }
       
       :host(:focus) {
