@@ -194,7 +194,7 @@ inspired styles to your `iron-data-table`.
                             expanded="[[_isExpanded(item, _expandedItems, _expandedItems.*)]]"
                             index="[[index]]"
                             item="[[item]]"
-                            tabindex="-1"
+                            tabindex="0"
                             highlighted="[[_isHighLighted(index,_highlightIndex)]]"
                             selected="[[_isSelected(item, selectedItems, selectedItems.*)]]">
               <data-table-checkbox hidden$="[[!multiSelection]]" tabindex="0" checked="[[_isSelected(item, selectedItems, selectedItems.*)]]" on-tap="_onCheckBoxTap"></data-table-checkbox>
@@ -492,7 +492,7 @@ inspired styles to your `iron-data-table`.
         '_resetData(dataSource, filter.*, sortOrder.*)',
         '_clearSelection(filter.*, sortOrder.*)',
         '_manageHighLightedItem(_highlightIndex)',
-        '_manageHighLightIndex(highLightEnabled)',
+        '_manageHighLightIndex(highlightEnabled)',
         '_manageHighLightIndex(items,items.*)'
       ],
 
@@ -1162,7 +1162,7 @@ inspired styles to your `iron-data-table`.
         if(highlightIndex < this.items.length-1){
           highlightIndex += 1;
           this.set('_highlightIndex', highlightIndex);
-          this._focusHighlightedRow();
+          this._manageScroll();
         }
       },
       
@@ -1176,7 +1176,7 @@ inspired styles to your `iron-data-table`.
         if(highlightIndex > 0){
           highlightIndex -= 1;
           this.set('_highlightIndex', highlightIndex);
-          this._focusHighlightedRow();
+          this._manageScroll();
         }
       },
       
@@ -1198,7 +1198,7 @@ inspired styles to your `iron-data-table`.
           
           if(self._highlightIndex > self.items.length-1){
             self.set('_highlightIndex', 0);
-            this._focusHighlightedRow();
+            this._manageScroll();
             return;
           }
           
@@ -1211,7 +1211,7 @@ inspired styles to your `iron-data-table`.
           
           if(!previousHighLightedItem){
             self.set('_highlightIndex', 0);
-            this._focusHighlightedRow();
+            this._manageScroll();
             return;
           }
           
@@ -1219,7 +1219,7 @@ inspired styles to your `iron-data-table`.
           
           if(currentHighLightedItem._id === previousHighLightedItem._id){
             self.set('_highlightIndex', self._highlightIndex);
-            this._focusHighlightedRow();
+            this._manageScroll();
             return;
           }
           
@@ -1228,7 +1228,7 @@ inspired styles to your `iron-data-table`.
           });
           
           self.set('_highlightIndex', highLightIndex);
-          this._focusHighlightedRow();
+          this._manageScroll();
         }, 20);
       },
       
@@ -1245,32 +1245,15 @@ inspired styles to your `iron-data-table`.
         this.set('highLightedItem', items[_highlightIndex]);
       },
       
-      _focusHighlightedRow: function(){
-        var ironList, ironListOffset;
-        var highlightedRow, highlightedRowOffset;
-        var highlightIndex = this._highlightIndex;
+      _manageScroll: function(){
+        var highlightedRow = this.querySelector("data-table-row[highlighted]");
         
-        if(highlightIndex === null || highlightIndex === undefined || highlightIndex === -1){
+        if(!highlightedRow){
           return;
         }
         
-        ironList = this.$$('iron-list');
-        highlightedRow = this.querySelector("data-table-row[highlighted]");
-        
-        if(!ironList || !highlightedRow){
-          return;
-        }
-        
-        ironListOffset = ironList.getBoundingClientRect();
-        highlightedRowOffset = highlightedRow.getBoundingClientRect();
-        
-        if((highlightedRowOffset.top + highlightedRowOffset.height) > (ironListOffset.top + ironListOffset.height)){
-          ironList.scrollToIndex(highlightIndex);
-        }
-        
-        if(highlightedRowOffset.top < ironListOffset.top){
-          ironList.scrollToIndex(highlightIndex);
-        }
+        highlightedRow.focus();
+        highlightedRow.blur();
       },
       
       _onCheckBoxTap: function(e) {
