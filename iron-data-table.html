@@ -1219,7 +1219,6 @@ inspired styles to your `iron-data-table`.
           
           if(currentHighLightedItem._id === previousHighLightedItem._id){
             self.set('_highlightIndex', self._highlightIndex);
-            this._manageScroll();
             return;
           }
           
@@ -1228,7 +1227,6 @@ inspired styles to your `iron-data-table`.
           });
           
           self.set('_highlightIndex', highLightIndex);
-          this._manageScroll();
         }, 20);
       },
       
